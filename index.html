@@ -1,52 +1,83 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>gooogle</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apps</title>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px 10px;
-      background: #fafafa;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    a {
-      display: inline-block;
-      padding: 14px 22px;
-      background: #d62976;
+
+    body {
+      background: #000;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .app {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 17px 22px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 14px;
       color: white;
       text-decoration: none;
-      border-radius: 8px;
-      font-size: 18px;
+      font-size: 17px;
+      font-weight: 600;
+      transition: 0.2s ease;
+    }
+
+    .app:hover {
+      background: #1c1c1c;
+      transform: scale(1.03);
+      border-color: #444;
+    }
+
+    .app img {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
     }
   </style>
 </head>
-<body>
-  <h2>google</h2>
-  <p>search with google</p>
-  <a href="https://www.google.com/">
-    open google
-  </a>
 
-    a 
-  </style>
-</head>
 <body>
-  <h2>google</h2>
-  <p>send emails</p>
-  <a href="https://mail.google.com/mail/u/0/">
-    Open gmail
-  </a>
 
-    a 
-  </style>
-</head>
-<body>
-  <h2>google</h2>
-  <p>search with chatgpt</p>
-  <a href="https://chatgpt.com/">
-    Open chatgpt
-</a>
+  <div class="container">
+
+    <a class="app" href="https://www.google.com/" target="_blank">
+      <img src="https://www.google.com/s2/favicons?domain=google.com&sz=64">
+      Google
+    </a>
+
+    <a class="app" href="https://chatgpt.com/" target="_blank">
+      <img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64">
+      ChatGPT
+    </a>
+
+    <a class="app" href="https://mail.google.com/mail/u/0/" target="_blank">
+      <img src="https://www.google.com/s2/favicons?domain=gmail.com&sz=64">
+      Gmail
+    </a>
+
+  </div>
 
 </body>
 </html>

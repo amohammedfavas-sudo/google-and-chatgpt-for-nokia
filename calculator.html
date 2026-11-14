@@ -1,0 +1,176 @@
+from pathlib import Path
+
+html = r'''<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Mini Scientific Calculator</title>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #101010; color: #f2f2f2; font-family: Arial, sans-serif; }
+body { padding: 6px; }
+#app { max-width: 360px; margin: 0 auto; }
+#top { font-size: 13px; color: #aaa; padding: 4px 2px 7px; }
+#mode { float: right; color: #8fc7ff; }
+#screen { width: 100%; height: 48px; border: 1px solid #444; background: #000; color: #fff; font-size: 21px; text-align: right; padding: 7px; border-radius: 4px; }
+#answer { min-height: 25px; text-align: right; color: #9ed68a; font-size: 17px; padding: 5px 7px 8px; overflow-wrap: anywhere; }
+#keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+button { min-width: 0; height: 43px; border: 1px solid #454545; border-radius: 4px; background: #252525; color: #f5f5f5; font-size: 16px; padding: 0; }
+button:focus { outline: 2px solid #8fc7ff; background: #394b5b; }
+button.fn { background: #183044; }
+button.op { background: #38312a; }
+button.action { background: #49302c; }
+button.equal { background: #245b38; }
+#help { color: #888; font-size: 11px; line-height: 1.4; padding: 8px 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">MINI SCIENTIFIC <span id="mode">DEG</span></div>
+  <input id="screen" type="text" value="" readonly aria-label="Expression">
+  <div id="answer" aria-live="polite">0</div>
+  <div id="keys">
+    <button class="fn" data-v="sin(">sin</button>
+    <button class="fn" data-v="cos(">cos</button>
+    <button class="fn" data-v="tan(">tan</button>
+    <button class="op" data-v="(">(</button>
+
+    <button class="fn" data-v="log(">log</button>
+    <button class="fn" data-v="ln(">ln</button>
+    <button class="fn" data-v="sqrt(">√</button>
+    <button class="op" data-v=")">)</button>
+
+    <button class="fn" data-v="^2">x²</button>
+    <button class="fn" data-v="^">xʸ</button>
+    <button class="fn" data-v="!">n!</button>
+    <button class="op" data-v="/">÷</button>
+
+    <button data-v="7">7</button>
+    <button data-v="8">8</button>
+    <button data-v="9">9</button>
+    <button class="op" data-v="*">×</button>
+
+    <button data-v="4">4</button>
+    <button data-v="5">5</button>
+    <button data-v="6">6</button>
+    <button class="op" data-v="-">−</button>
+
+    <button data-v="1">1</button>
+    <button data-v="2">2</button>
+    <button data-v="3">3</button>
+    <button class="op" data-v="+">+</button>
+
+    <button class="action" id="clear">AC</button>
+    <button data-v="0">0</button>
+    <button data-v=".">.</button>
+    <button class="action" id="del">DEL</button>
+
+    <button class="fn" id="toggle">DEG/RAD</button>
+    <button class="fn" data-v="pi">π</button>
+    <button class="fn" data-v="e">e</button>
+    <button class="equal" id="equals">=</button>
+  </div>
+  <div id="help">Use arrow keys to move, OK/Enter to select. Backspace deletes. Press C to clear. You can also use number keys and + − × /.</div>
+</div>
+<script>
+(function () {
+  var expr = "";
+  var rad = false;
+  var screen = document.getElementById("screen");
+  var answer = document.getElementById("answer");
+  var mode = document.getElementById("mode");
+  var buttons = document.getElementById("keys").getElementsByTagName("button");
+  var selected = 0;
+
+  function update() {
+    screen.value = expr;
+    mode.innerHTML = rad ? "RAD" : "DEG";
+  }
+  function add(v) {
+    if (expr.length < 90) expr += v;
+    update();
+  }
+  function factorial(n) {
+    if (n < 0 || n > 170 || Math.floor(n) !== n) throw "Invalid factorial";
+    var r = 1, i;
+    for (i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+  function calculate() {
+    if (!expr) { answer.innerHTML = "0"; return; }
+    try {
+      var s = expr;
+      s = s.replace(/pi/g, "Math.PI").replace(/\be\b/g, "Math.E");
+      s = s.replace(/sqrt\(/g, "Math.sqrt(");
+      s = s.replace(/log\(/g, "Math.log10(");
+      s = s.replace(/ln\(/g, "Math.log(");
+      s = s.replace(/sin\(/g, "SIN(").replace(/cos\(/g, "COS(").replace(/tan\(/g, "TAN(");
+      s = s.replace(/SIN\(/g, (rad ? "Math.sin(" : "Math.sin(Math.PI/180*"));
+      s = s.replace(/COS\(/g, (rad ? "Math.cos(" : "Math.cos(Math.PI/180*"));
+      s = s.replace(/TAN\(/g, (rad ? "Math.tan(" : "Math.tan(Math.PI/180*"));
+      if (!rad) s = s.replace(/Math\.(sin|cos|tan)\(Math\.PI\/180\*/g, "Math.$1(Math.PI/180*");
+      s = s.replace(/\^/g, "**");
+      /* Convert postfix factorials, including simple numeric or parenthesized terms. */
+      var old;
+      do {
+        old = s;
+        s = s.replace(/(\d+(?:\.\d+)?|\([^()]*\))!/g, "factorial($1)");
+      } while (s !== old);
+      if (/[^0-9+\-*/()., MathPIE_sincotagqrtlfab!**]/.test(s)) throw "Invalid input";
+      var result = Function("factorial", "return (" + s + ");")(factorial);
+      if (typeof result !== "number" || !isFinite(result)) throw "Math error";
+      answer.innerHTML = String(Number(result.toPrecision(10)));
+    } catch (err) {
+      answer.innerHTML = "Error";
+    }
+  }
+  function press(btn) {
+    if (!btn) return;
+    var v = btn.getAttribute("data-v");
+    if (v !== null) { add(v); return; }
+    if (btn.id === "clear") { expr = ""; answer.innerHTML = "0"; update(); }
+    else if (btn.id === "del") { expr = expr.substring(0, expr.length - 1); update(); }
+    else if (btn.id === "equals") calculate();
+    else if (btn.id === "toggle") { rad = !rad; update(); }
+  }
+  var i;
+  for (i = 0; i < buttons.length; i++) {
+    buttons[i].onclick = (function (b) { return function () { selected = indexOf(b); press(b); }; })(buttons[i]);
+  }
+  function indexOf(b) {
+    var j;
+    for (j = 0; j < buttons.length; j++) if (buttons[j] === b) return j;
+    return 0;
+  }
+  function focusSelected() {
+    if (selected < 0) selected = buttons.length - 1;
+    if (selected >= buttons.length) selected = 0;
+    buttons[selected].focus();
+  }
+  document.onkeydown = function (e) {
+    e = e || window.event;
+    var k = e.key || e.keyCode;
+    if (k === "ArrowRight" || k === 39) { selected++; focusSelected(); return false; }
+    if (k === "ArrowLeft" || k === 37) { selected--; focusSelected(); return false; }
+    if (k === "ArrowDown" || k === 40) { selected += 4; focusSelected(); return false; }
+    if (k === "ArrowUp" || k === 38) { selected -= 4; focusSelected(); return false; }
+    if (k === "Enter" || k === 13 || k === " " || k === 32) { press(buttons[selected]); return false; }
+    if (k === "Backspace" || k === 8) { press(document.getElementById("del")); return false; }
+    if (k === "Escape" || k === "c" || k === "C" || k === 27) { press(document.getElementById("clear")); return false; }
+    var map = {"+":"+","-":"-","*":"*","/":"/",".":".","(":"(",")":")","^":"^"};
+    if ((typeof k === "string" && k.length === 1 && k >= "0" && k <= "9") || map[k]) {
+      add(map[k] || k); return false;
+    }
+    if (k === "=") { calculate(); return false; }
+  };
+  update();
+  focusSelected();
+})();
+</script>
+</body>
+</html>
+'''
+path = Path("/mnt/data/mini_scientific_calculator.html")
+path.write_text(html, encoding="utf-8")
+print(f"Created: {path} ({path.stat().st_size} bytes)")
